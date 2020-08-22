@@ -55,7 +55,9 @@ void FEMBodyClass::dynamicFEM() {
 		// Increment counter
 		itNR++;
 
-	} while (resNR > TOL && itNR < MAXIT);
+	} while (resNR > TOL && itNR < MAXIT && itNR>1);
+
+	U[0]=U[0]+0.00001;
 
 	// Compute new velocities and accelerations
 	finishNewmark();
@@ -141,6 +143,9 @@ void FEMBodyClass::finishNewmark() {
 	// Update velocities and accelerations
 	Udotdot = a6 * (U - U_n) + a7 * Udot_n + a8 * Udotdot_n;
 	Udot = Udot_n + a9 * Udotdot_n + a10 * Udotdot;
+	//wjq-modified
+	Udotdot[0]=0;
+	Udot[0]=(U[0]-U_n[0])/Dt;
 }
 
 // Update IBM markers
@@ -529,6 +534,7 @@ FEMBodyClass::FEMBodyClass(IBMBodyClass *iBodyPtr, const array<double, dims> &po
 
 	// Position vector for marker
 	array<double, dims> position;
+	double Dt = iPtr->oPtr->gPtr->Dt;
 
 	// Loop through and build nodes
 	for (int i = 0; i < numNodes; i++) {
@@ -545,6 +551,11 @@ FEMBodyClass::FEMBodyClass(IBMBodyClass *iBodyPtr, const array<double, dims> &po
 
 		// Call node constructor
 		node.emplace_back(i, position, angle);
+
+		delU.push_back(0.000001);delU.push_back(0.0);delU.push_back(0.0);
+		Udot_n.push_back(0.000001/Dt);Udot_n.push_back(0.0);Udot_n.push_back(0.0);
+		Udot.push_back(0.000001/Dt);Udot.push_back(0.0);Udot.push_back(0.0);
+
 	}
 
 	// Loop through and build elements
@@ -564,13 +575,13 @@ FEMBodyClass::FEMBodyClass(IBMBodyClass *iBodyPtr, const array<double, dims> &po
 	R.resize(bodyDOFs, 0.0);
 	F.resize(bodyDOFs, 0.0);
 	U.resize(bodyDOFs, 0.0);
-	delU.resize(bodyDOFs, 0.0);
-	Udot.resize(bodyDOFs, 0.0);
+//	delU.resize(bodyDOFs, 0.0);
+//	Udot.resize(bodyDOFs, 0.0);
 	Udotdot.resize(bodyDOFs, 0.0);
 	U_n.resize(bodyDOFs, 0.0);
 	U_nm1.resize(bodyDOFs, 0.0);
 	U_nm2.resize(bodyDOFs, 0.0);
-	Udot_n.resize(bodyDOFs, 0.0);
+//	Udot_n.resize(bodyDOFs, 0.0);
 	Udotdot_n.resize(bodyDOFs, 0.0);
 	U_km1.resize(bodyDOFs, 0.0);
 	R_k.resize(bodyDOFs, 0.0);

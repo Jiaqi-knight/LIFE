@@ -231,7 +231,7 @@ int Utils::omp_thread_count() {
 	int n = 0;
 
 	// Do parallel reduction on n
-#pragma omp parallel reduction(+:n)
+//#pragma omp parallel reduction(+:n)
 	n += 1;
 
 	// Return total thread count

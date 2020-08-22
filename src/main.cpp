@@ -42,7 +42,7 @@ int main() {
 	GridClass grid;
 
 	// If IBM then setup the body object
-	ObjectsClass objects(grid);
+	ObjectsClass objects(grid);//wjq
 
 	// Read in restart file if required
 	if (grid.restartFlag == true) {

@@ -49,7 +49,7 @@ enum eFlexibleType {eFlexible, eRigid};
 enum eBCType {eClamped, eSupported};
 enum eBodyType {eCircle, eFilament};
 enum eLatType {eFluid, eWall, eVelocity, eFreeSlip, ePressure, eConvective};
-enum eProfileType {eParabolic, eShear, eBoundaryLayer};
+enum eProfileType {eParabolic, eShear, eBoundaryLayer, eUniformLayer};
 
 // Macros
 #define SQ(x) ((x) * (x))

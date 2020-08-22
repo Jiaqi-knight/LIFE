@@ -69,9 +69,9 @@ void ObjectsClass::femKernel() {
 
 	// Loop through all bodies, do FEM, and then sum to get residual values
 #ifdef ORDERED
-	#pragma omp parallel for ordered schedule(dynamic,1)
+	//#pragma omp parallel for ordered schedule(dynamic,1)
 #else
-	#pragma omp parallel for schedule(guided) reduction(+:res, num, den)
+	//#pragma omp parallel for schedule(guided) reduction(+:res, num, den)
 #endif
 	for (size_t ib = 0; ib < iBody.size(); ib++) {
 		if (iBody[ib].flex == eFlexible) {
@@ -81,7 +81,7 @@ void ObjectsClass::femKernel() {
 
 			// Either do ordered or non-deterministic sum (it can affect results)
 #ifdef ORDERED
-		#pragma omp ordered
+		//#pragma omp ordered
 #endif
 			{
 				// Sum to get global values
@@ -105,7 +105,7 @@ void ObjectsClass::ibmKernelInterp() {
 	fill(gPtr->force_ibm.begin(), gPtr->force_ibm.end(), 0.0);
 
 	// Loop through all bodies and nodes
-#pragma omp parallel for schedule(guided)
+//#pragma omp parallel for schedule(guided)
 	for (size_t i = 0; i < iNode.size(); i++) {
 
 		// Interpolate
@@ -123,14 +123,14 @@ void ObjectsClass::ibmKernelSpread() {
 	fill(gPtr->force_ibm.begin(), gPtr->force_ibm.end(), 0.0);
 
 	// Start parallel section
-#pragma omp parallel
+//#pragma omp parallel
 	{
 
 		// Loop through all bodies and nodes
 #ifdef ORDERED
-	#pragma omp for ordered schedule(dynamic,1)
+	//#pragma omp for ordered schedule(dynamic,1)
 #else
-	#pragma omp for schedule(guided)
+	//#pragma omp for schedule(guided)
 #endif
 		for (size_t i = 0; i < iNode.size(); i++) {
 
@@ -139,7 +139,7 @@ void ObjectsClass::ibmKernelSpread() {
 		}
 
 		// Loop through all bodies and nodes
-#pragma omp for schedule(guided)
+//#pragma omp for schedule(guided)
 		for (size_t i = 0; i < iNode.size(); i++) {
 
 			// Update macroscopic
@@ -152,14 +152,14 @@ void ObjectsClass::ibmKernelSpread() {
 void ObjectsClass::recomputeObjectVals() {
 
 	// Start parallel section
-#pragma omp parallel
+//#pragma omp parallel
 	{
 
 		// Do predictor step if first iteration
 		if (subIt == 0) {
 
 			// Loop through bodies, set start of time step, and do predictor (if on)
-#pragma omp for schedule(guided)
+//#pragma omp for schedule(guided)
 			for (size_t ib = 0; ib < iBody.size(); ib++) {
 				if (iBody[ib].flex == eFlexible) {
 
@@ -176,7 +176,7 @@ void ObjectsClass::recomputeObjectVals() {
 		else {
 
 			// Get relaxation value (only one thread)
-#pragma omp single
+//#pragma omp single
 			{
 				if (subIt == 1) {
 
@@ -191,7 +191,7 @@ void ObjectsClass::recomputeObjectVals() {
 			}
 
 			// Relax displacements and update IBM
-#pragma omp for schedule(guided)
+//#pragma omp for schedule(guided)
 			for (size_t ib = 0; ib < iBody.size(); ib++) {
 				if (iBody[ib].flex == eFlexible) {
 
@@ -214,7 +214,7 @@ void ObjectsClass::recomputeObjectVals() {
 		}
 
 		// Loop through all bodies and nodes
-#pragma omp for schedule(guided)
+//#pragma omp for schedule(guided)
 		for (size_t i = 0; i < iNode.size(); i++) {
 			if (iNode[i].iPtr->flex == eFlexible) {
 
@@ -255,7 +255,7 @@ void ObjectsClass::computeEpsilon() {
 	double Dx = gPtr->Dx;
 
 	// Loop through all bodies and get epsilon
-#pragma omp parallel for schedule(guided)
+//#pragma omp parallel for schedule(guided)
 	for (size_t ib = 0; ib < (*iBodyPtr).size(); ib++) {
 
 		// Do if first time step; if not first time step then only do if flexible
@@ -1611,7 +1611,7 @@ ObjectsClass::ObjectsClass(GridClass &g) {
 
 	// Initialise objects
 	if (hasIBM)
-		initialiseObjects();
+		initialiseObjects();//wjq
 
 	// Get numer of FEM DOFs in whole simulation
 	nFlex = simDOFs = 0;

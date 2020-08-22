@@ -45,14 +45,14 @@ void GridClass::lbmKernel() {
 	rho_n.swap(rho);
 
 	// Start parallel section
-#pragma omp parallel
+//#pragma omp parallel
 	{
 
 		// Set forcing if Womersley pressure gradient is used
 #ifdef WOMERSLEY
 
 		// Loop through all points
-#pragma omp for schedule(guided)
+//#pragma omp for schedule(guided)
 		for (int id = 0; id < Nx * Ny; id++) {
 
 			// Calculate forcing
@@ -62,7 +62,7 @@ void GridClass::lbmKernel() {
 #endif
 
 		// Loop through all points
-#pragma omp for schedule(guided) collapse(2)
+//#pragma omp for schedule(guided) collapse(2)
 		for (int i = 0; i < Nx; i++) {
 			for (int j = 0; j < Ny; j++) {
 
@@ -75,7 +75,7 @@ void GridClass::lbmKernel() {
 		}
 
 		// Loop through all points
-#pragma omp for schedule(guided)
+//#pragma omp for schedule(guided)
 		for (int id = 0; id < Nx * Ny; id++) {
 
 			// Update fluid site macroscopic values
@@ -84,7 +84,7 @@ void GridClass::lbmKernel() {
 		}
 
 		// Loop through all BC sites and apply BCs before getting macroscopic
-#pragma omp for schedule(guided)
+//#pragma omp for schedule(guided)
 		for (size_t bc = 0; bc < BCVec.size(); bc++) {
 
 			// ID
@@ -226,7 +226,7 @@ inline void GridClass::streamCollide(int i, int j, int id) {
 	for (int v = 0; v < nVels; v++) {
 
 		// Calculate newx and newy then collide and stream
-		int recv_id = ((i + c[v * dims + eX] + Nx) % Nx) * Ny + ((j + c[v * dims + eY] + Ny) % Ny);
+		int recv_id = MOD((i + c[v * dims + eX] + Nx) , Nx) * Ny + MOD((j + c[v * dims + eY] + Ny) , Ny);
 
 		// Update new f
 		f[recv_id * nVels + v] = fStar[v];
@@ -237,7 +237,7 @@ inline void GridClass::streamCollide(int i, int j, int id) {
 	for (int v = 0; v < nVels; v++) {
 
 		// Calculate newx and newy then collide and stream
-		int recv_id = ((i + c[v * dims + eX] + Nx) % Nx) * Ny + ((j + c[v * dims + eY] + Ny) % Ny);
+		int recv_id = MOD((i + c[v * dims + eX] + Nx) , Nx) * Ny + MOD((j + c[v * dims + eY] + Ny) , Ny);
 
 		// Update new f
 		f[recv_id * nVels + v] = f_n[id * nVels + v] + omega * (equilibrium(id, v) - f_n[id * nVels + v]) + (1.0 - 0.5 * omega) * latticeForce(id, v);
@@ -487,7 +487,7 @@ void GridClass::convectiveSpeed() {
 	uOut /= static_cast<double>(Ny);
 
 	// Now loop through again and get delU
-#pragma omp parallel for schedule(guided)
+//#pragma omp parallel for schedule(guided)
 	for (int j = 0; j < Ny; j++) {
 		delU[j * dims + eX] = (-uOut / 2.0) * (3.0 * u[((Nx - 1) * Ny + j) * dims + eX] - 4.0 * u[((Nx - 2) * Ny + j) * dims + eX] + u[((Nx - 3) * Ny + j) * dims + eX]);
 		delU[j * dims + eY] = (-uOut / 2.0) * (3.0 * u[((Nx - 1) * Ny + j) * dims + eY] - 4.0 * u[((Nx - 2) * Ny + j) * dims + eY] + u[((Nx - 3) * Ny + j) * dims + eY]);

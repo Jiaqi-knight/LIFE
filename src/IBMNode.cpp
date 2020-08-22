@@ -36,7 +36,7 @@ void IBMNodeClass::interpolate() {
 	for (size_t s = 0; s < suppCount; s++) {
 
 		// Get ID
-		int id = supp[s].idx * Ny + supp[s].jdx;
+		int id = MOD(supp[s].idx , Nx) * Ny + MOD(supp[s].jdx , Ny);
 
 		// Interpolate density
 		interpRho += gPtr->rho[id] * supp[s].diracVal * 1.0 * 1.0;
@@ -67,7 +67,7 @@ void IBMNodeClass::spread() {
 	for (size_t s = 0; s < suppCount; s++) {
 
 		// Get ID
-		int id = supp[s].idx * Ny + supp[s].jdx;
+		int id = (supp[s].idx % Nx)* Ny + (supp[s].jdx % Ny);
 
 		// Get forces
 		double Fx = force[eX] * epsilon * ds * 1.0 * supp[s].diracVal;
@@ -75,7 +75,7 @@ void IBMNodeClass::spread() {
 
 		// Do either atomic (for performance) or ordered (for repeatability) reduction
 #ifdef ORDERED
-#pragma omp ordered
+//#pragma omp ordered
 		{
 			// Ordered write so is repeatable for different runs
 			gPtr->force_ibm[id * dims + eX] += Fx;
@@ -83,11 +83,11 @@ void IBMNodeClass::spread() {
 		}
 #else
 		// Atomic operation for concurrent writes
-#pragma omp atomic update
+//#pragma omp atomic update
 		gPtr->force_ibm[id * dims + eX] += Fx;
 
 		// Atomic operation for concurrent writes
-#pragma omp atomic update
+//#pragma omp atomic update
 		gPtr->force_ibm[id * dims + eY] += Fy;
 #endif
 	}
@@ -108,7 +108,7 @@ void IBMNodeClass::updateMacroscopic() {
 		double vTmp = 0.0;
 
 		// Get ID
-		int id = supp[s].idx * Ny + supp[s].jdx;
+		int id = MOD(supp[s].idx , Nx) * Ny + MOD(supp[s].jdx , Ny);
 
 		// Sum to find rho and momentum
 		for (int v = 0; v < nVels; v++) {
@@ -122,15 +122,15 @@ void IBMNodeClass::updateMacroscopic() {
 		vTmp = (vTmp + 0.5 * (gPtr->force_xy[id * dims + eY] + gPtr->force_ibm[id * dims + eY])) / rhoTmp;
 
 		// Atomic operation for concurrent writes
-#pragma omp atomic write
+//#pragma omp atomic write
 		gPtr->rho[id] = rhoTmp;
 
 		// Atomic operation for concurrent writes
-#pragma omp atomic write
+//#pragma omp atomic write
 		gPtr->u[id * dims + eX] = uTmp;
 
 		// Atomic operation for concurrent writes
-#pragma omp atomic write
+//#pragma omp atomic write
 		gPtr->u[id * dims + eY] = vTmp;
 	}
 }
@@ -163,16 +163,20 @@ void IBMNodeClass::findSupport() {
 
 			// Get distance in y
 			double distY = fabs(pos[eY] / Dx - j);
-
+			
 			// Check distance and if it is within grid
-			if (distX < stencilWidth && distY < stencilWidth && i >= 0 && i <= Nx-1 && j >= 0 && j <= Ny-1) {
+		if (distX < stencilWidth && distY < stencilWidth  && j >= 0 && i >= 0 ) {
 
 				// Check if buffer size is big enough
 				if (suppCount == suppSize)
 					ERROR("Support buffer size is not big enough for number of support points...exiting");
-
+               /* if (i > Nx-1)
+                {
+	                int kk=Nx;
+                }
+			    */
 				// Add to support
-				supp[suppCount++] = IBMSupportClass(i, j, Utils::diracDelta(distX) * Utils::diracDelta(distY));
+				supp[suppCount++] = IBMSupportClass(i , j, Utils::diracDelta(distX) * Utils::diracDelta(distY));
 			}
 		}
 	}

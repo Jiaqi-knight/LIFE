@@ -1,8 +1,8 @@
 # LIFE makefile
 
 # Compiler command
-CC=g++
-CFLAGS=-O3 -std=c++0x -fopenmp -Wall -Wextra
+CC=g++ -g
+CFLAGS=-O0 -std=c++0x -Wall -Wextra -fopenmp
 
 # Executable
 EXE=LIFE
